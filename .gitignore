@@ -12,3 +12,8 @@
 .vscode/
 .mysql
 .postgresql
+nginx/certs/**.crt
+nginx/certs/**.key
+nginx/nginx.conf
+docker/keycloak/Dockerfile
+docker/keycloak/**.keystore

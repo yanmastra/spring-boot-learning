@@ -1,0 +1,8 @@
+{
+  "realm": "si-akademik",
+  "auth-server-url": "https://keycloak.mahotama.com",
+  "resource": "authz-servlet",
+  "credentials": {
+    "secret": "X3BrECQAoRxMTq9w9NbDrwC4YPG1bpia"
+  }
+}

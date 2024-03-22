@@ -1,4 +1,4 @@
-package com.yanmastra.integrationTest;
+package com.yanmastra.msSecurityBase.configuration;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +27,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 "message", ex.getCause() == null ? ex.getMessage():ex.getCause().getMessage(),
                 "data", body
         );
-
         return ResponseEntity.status(response.getStatusCode()).body(newBody);
     }
 }

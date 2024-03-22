@@ -1,9 +1,9 @@
-package com.yanmastra.integrationTest.controller;
+package com.yanmastra.msSecurityBase.controller;
 
-import com.yanmastra.integrationTest.entity.TestIntegrationEntity;
-import com.yanmastra.integrationTest.repo.TIEntityRepository;
 import com.yanmastra.msSecurityBase.crud.CrudEndpoint;
 import com.yanmastra.msSecurityBase.crud.PagingJpaRepository;
+import com.yanmastra.msSecurityBase.entity.TestIntegrationEntity;
+import com.yanmastra.msSecurityBase.repo.TIEntityRepository;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,4 +1,4 @@
-package com.yanmastra.integrationTest.entity;
+package com.yanmastra.msSecurityBase.entity;
 
 import com.yanmastra.msSecurityBase.crud.CrudableEntity;
 import jakarta.persistence.Column;

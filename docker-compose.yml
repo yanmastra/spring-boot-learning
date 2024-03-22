@@ -1,49 +1,84 @@
 version: '3.8'
 
 services:
-  mysql:
-    image: arm64v8/mysql:8.0.29
-    container_name: 'spring-boot-mysql'
-    hostname: 'spring-boot-mysql'
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_USER=${MYSQL_USERNAME}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-    volumes:
-      - ./.mysql:/var/lib/mysql:delegated
-      - ./docker/provision/mysql/init:/docker-entrypoint-initdb.d
-    networks:
-      - spring-boot-learning
-    ports:
-      - ${MYSQL_PORT}:3306
-    command: --sql_mode="" --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone="UTC"
-    healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
-      timeout: 20s
-      retries: 10
-    restart: unless-stopped
 
   postgres:
     build:
-      dockerfile: ./docker-postgresql-multiple-databases/Dockerfile
-    container_name: 'spring-boot-postgres'
-    hostname: 'spring-boot-postgres'
+      dockerfile: docker/postgres/Dockerfile
+    container_name: 'sb-learning-postgres'
+    hostname: 'sb-learning-postgres'
     ports:
       - "${POSTGRES_EXTERNAL_PORT}:5432"
     environment:
       POSTGRES_MULTIPLE_DATABASES: ${DB_LIST}
-      POSTGRES_USER: ${MYSQL_USERNAME}
-      POSTGRES_PASSWORD: ${MYSQL_PASSWORD}
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     volumes:
       - ./.postgresql:/var/lib/postgresql/data
-      - ./docker-postgresql-multiple-databases:/docker-entrypoint-initdb.d
+      - ./docker/postgres:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready", "-d", "db_prod"]
       timeout: 20s
       retries: 10
     restart: unless-stopped
+    networks:
+      - spring-boot-learning
+
+  keycloak:
+    build:
+      dockerfile: ./docker/keycloak/Dockerfile
+    container_name: 'sb-learning-keycloak'
+    command:
+      - start
+      - --optimized
+#      - --db=postgres
+      - --db-url=jdbc:postgresql://sb-learning-postgres:5432/${KEYCLOAK_DB_NAME}?serverTimezone=UTC
+      - --db-username=${DATABASE_USERNAME}
+      - --db-password=${DATABASE_PASSWORD}
+      - --https-key-store-file=/opt/keycloak/conf/server.keystore
+      - --https-key-store-password=${KEYCLOAK_KEYSTORE_PASSWORD}
+      - --proxy-headers=forwarded
+      - --hostname-url=https://${KEYCLOAK_HOST}
+#      - --hostname-strict=false
+#      - --hostname-strict-https=false
+    ports:
+      - "${KEYCLOAK_EXTERNAL_PORT}:8443"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      JAVA_OPTS_KC_HEAP: "-XX:MaxHeapFreeRatio=30 -XX:MaxRAMPercentage=65"
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "https://localhost:8443/"]
+      interval: 5s
+      timeout: 5s
+      retries: 1
+      start_period: 6s
+    restart: unless-stopped
+    networks:
+      - spring-boot-learning
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      TRUST_DOWNSTREAM_PROXY: true
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/certs:/etc/nginx/certs
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx:/var/lib/www
+    networks:
+      - spring-boot-learning
+
 
   zookeeper:
     image: quay.io/strimzi/kafka:0.23.0-kafka-2.8.0

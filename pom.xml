@@ -14,8 +14,7 @@
 	</properties>
 
 	<modules>
-		<module>microservices</module>
-		<module>inventories</module>
 		<module>ms-integration-test</module>
+		<module>ms-security-base</module>
 	</modules>
 </project>
