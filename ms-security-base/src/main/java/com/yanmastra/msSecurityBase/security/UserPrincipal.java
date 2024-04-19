@@ -1,103 +1,73 @@
 package com.yanmastra.msSecurityBase.security;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.yanmastra.msSecurityBase.utils.DateTimeUtils;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.Transient;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
+@Transient
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserPrincipal implements Principal {
-//    @JsonProperty("user")
-//    private final UserOnly user;
-    @JsonProperty("allowed_roles")
-    private final List<String> allowedRoles;
-
-    @JsonProperty("app_code")
-    private final String appCode;
-    @JsonProperty("access_token")
-    private final String accessToken;
-
-    public UserPrincipal(/*UserOnly user,*/ List<String> allowedRoles, String appCode, String accessToken) {
-//        this.user = user;
-        this.allowedRoles = allowedRoles == null ? new ArrayList<>() : allowedRoles;
-        this.appCode = appCode;
-        this.accessToken = accessToken;
+@JsonIncludeProperties({"id", "name", "username", "email", "email_verified", "company_access", "authorities", "issuer", "issued_at"})
+public class UserPrincipal extends JwtAuthenticationToken {
+    public UserPrincipal(Jwt jwt) {
+        super(jwt);
     }
 
+    public UserPrincipal(Jwt jwt, Collection<? extends GrantedAuthority> authorities) {
+        super(jwt, authorities);
+    }
+
+    public UserPrincipal(Jwt jwt, Collection<? extends GrantedAuthority> authorities, String name) {
+        super(jwt, authorities, jwt.getSubject());
+    }
+
+    @JsonProperty("id")
     @Override
     public String getName() {
-//        return user.getUsername();
-        return null;
+        return super.getName();
     }
 
-    @JsonIgnore
-    public String getAppCode() {
-        return appCode;
+    @JsonProperty("name")
+    public String getUserName(){
+        return getToken().getClaimAsString("name");
     }
 
-    @JsonIgnore
-    public boolean isRoleAllowed(String roleCode){
-        boolean result = allowedRoles.contains(roleCode);
-        if (result) return true;
-        throw new SecurityException("Access Denied!");
+    @JsonProperty("email")
+    public String getEmail() {
+        return getToken().getClaimAsString("email");
     }
 
-    @JsonIgnore
-    public String getAccessToken() {
-        return accessToken;
+    @JsonProperty("username")
+    public String getUsername() {
+        return getToken().getClaimAsString("preferred_username");
     }
 
-    @JsonIgnore
-    @Override
-    public String toString() {
-        return "UserPrincipal{" +
-//                "user=" + user +
-                ", allowedRoles=" + allowedRoles +
-                '}';
+    @JsonProperty("email_verified")
+    public boolean isEmailVerified() {
+        return getToken().getClaimAsBoolean("email_verified");
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-//        UserPrincipal principal = (UserPrincipal) o;
-        return true; //Objects.equals(/*user.getId(), principal.user.getId()) &&*/ Objects.equals(allowedRoles, principal.allowedRoles);
+    @JsonProperty("company_access")
+    public Set<String> getCompanyAccess() {
+        return new HashSet<>(getToken().getClaimAsStringList("company_access"));
     }
 
-    @Override
-    public int hashCode() {
-//        return Objects.hash(user, allowedRoles);
-        return Objects.hash(allowedRoles, appCode, accessToken);
+    @JsonProperty("issuer")
+    public String getIssuer() {
+        return getToken().getClaimAsString("iss");
     }
 
-//    @JsonIgnore
-//    public UserOnly getUser() {
-//        return user;
-//    }
-
-    public static UserPrincipal valueOf(Principal principal) {
-        if (principal instanceof UserPrincipal up) {
-            return up;
-        }
-        throw new IllegalArgumentException("The user principal is not secured");
+    @JsonProperty("issued_at")
+    public LocalDateTime getIssuedAt() {
+        return DateTimeUtils.toDateTime(getToken().getIssuedAt()+"");
     }
-
-//    public static UserPrincipal valueOf(SecurityContext context) {
-//        if (context instanceof UserSecurityContext usc) {
-//            return usc.getUserPrincipal();
-//        }
-//        throw new IllegalArgumentException("The user principal is not secured");
-//    }
-//
-//    public static UserPrincipal valueOf(ContainerRequestContext context) {
-//        SecurityContext securityContext = context.getSecurityContext();
-//        if (securityContext instanceof UserSecurityContext usc) {
-//            return usc.getUserPrincipal();
-//        }
-//        throw new IllegalArgumentException("The user principal is not secured");
-//    }
 }

@@ -1,49 +1,18 @@
 package com.yanmastra.msSecurityBase.utils;
 
+import com.yanmastra.msSecurityBase.Log;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
 
 public class DateTimeUtils {
-    private static final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-    private static final DateFormat displayableDateTime = new SimpleDateFormat("E, dd-MMM-yyyy HH:mm");
-    private static final DateFormat displayableDate = new SimpleDateFormat("E, dd-MMM-yyyy");
+    private static final DateTimeFormatter dtfShortDateTime = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private static final DateTimeFormatter dtfDateTime = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
     private static DateFormat utcDate = null;
-    public static Date getExpiredToken() {
-        String expInMinutes = System.getProperty("access_token_expired_in", "30");
-        int exp = Integer.parseInt(expInMinutes);
-        calendar.setTime(new Date());
-        calendar.add(Calendar.MINUTE, exp);
-        return calendar.getTime();
-    }
-
-    public static Date getExpiredRefreshToken() {
-        String expInMinutes = System.getProperty("refresh_token_expired_in", "4320");
-        int exp = Integer.parseInt(expInMinutes);
-        calendar.setTime(new Date());
-        calendar.add(Calendar.MINUTE, exp);
-        return calendar.getTime();
-    }
-
-    public static String displayDateTime(Date date) {
-        try {
-            return displayableDateTime.format(date);
-        } catch (Exception e){
-            System.err.println(e.getMessage());
-            return "Incorrect date";
-        }
-    }
-
-    public static String displayDate(Date date) {
-        try {
-            return displayableDate.format(date);
-        } catch (Exception e){
-            System.err.println(e.getMessage());
-            return "Incorrect date";
-        }
-    }
 
     static void initUtcDate(){
         if (utcDate == null) {
@@ -52,22 +21,15 @@ public class DateTimeUtils {
         }
     }
 
-    public static String formattedUtcDate(Date date) {
-        initUtcDate();
+    public static LocalDateTime toDateTime(String s) {
         try {
-            return utcDate.format(date);
-        } catch (Exception e){
-            System.err.println(e.getMessage());
-            return null;
-        }
-    }
-
-    public static Date fromUtc(String date) {
-        initUtcDate();
-        try {
-            return utcDate.parse(date);
-        } catch (Exception e){
-            System.err.println(e.getMessage());
+            if (s.length() == 20) {
+                return LocalDateTime.parse(s, dtfShortDateTime);
+            } else {
+                return LocalDateTime.parse(s, dtfDateTime);
+            }
+        } catch (Exception e) {
+            Log.log.warn(e.getMessage(), e);
             return null;
         }
     }

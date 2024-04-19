@@ -12,10 +12,12 @@ envsubst  < docker/keycloak/Dockerfile.template > docker/keycloak/Dockerfile
 
 docker compose -f ./docker-compose.yml up keycloak -d
 sleep 3
-host="\$host"
-request_uri="\$request_uri"
-remote_addr="\$remote_addr"
-scheme="\$scheme"
+
+export host="\$host"
+export request_uri="\$request_uri"
+export remote_addr="\$remote_addr"
+export scheme="\$scheme"
+echo "$host, $request_uri, $remote_addr, $scheme"
 envsubst  < ./nginx/nginx.conf.template > ./nginx/nginx.conf
 docker compose -f ./docker-compose.yml up nginx-proxy -d
 sleep 3

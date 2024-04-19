@@ -1,10 +1,14 @@
 package com.yanmastra.msSecurityBase.crud;
 
 import com.yanmastra.msSecurityBase.configuration.HttpException;
+import com.yanmastra.msSecurityBase.security.UserPrincipal;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -25,14 +29,38 @@ public abstract class CrudEndpoint<Entity extends CrudableEntity, Dao> {
     protected abstract Entity update(Entity entity, Dao dao);
     private static final Logger logger = LoggerFactory.getLogger(CrudEndpoint.class);
 
+    @Autowired
+    public EntityManager entityManager;
+
     @GetMapping
     @Transactional
-    public Page<Dao> getList(
+    public Paginate<Dao> getList(
             @RequestParam(value = "page", defaultValue = "1", required = false) Integer page,
             @RequestParam(value = "size", defaultValue = "5", required = false) Integer size,
+            @RequestParam Map<String, String> allParams,
             Principal principal
     ) {
-        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        logger.info("page:"+page+", size:"+size);
+
+        allParams.remove("page");
+        allParams.remove("size");
+
+        String keyword = "";
+        if (allParams.containsKey("search") && StringUtils.isNotBlank(allParams.get("search"))) {
+            keyword = allParams.get("search");
+        }
+
+        Pageable pageable = Pageable.ofSize(size).withPage(page-1);
+        Page<Dao> daoPage;
+        if (StringUtils.isBlank(keyword) && allParams.isEmpty()) {
+            daoPage = getRepository().findAll(pageable).map(this::fromEntity);
+        } else {
+            daoPage = onSearchAndFilters(keyword, allParams, pageable);
+        }
+        return Paginate.of(daoPage);
+    }
+
+    protected Page<Dao> onSearchAndFilters(String searchKeyword, Map<String, String> filters, Pageable pageable) {
         return getRepository().findAll(pageable).map(this::fromEntity);
     }
 
@@ -55,7 +83,7 @@ public abstract class CrudEndpoint<Entity extends CrudableEntity, Dao> {
     @Transactional
     public ResponseEntity<Map<String, Object>> create(
             @RequestBody Dao dao,
-            Principal context
+            UserPrincipal context
     ) {
         Entity newEntity = toEntity(dao);
         Optional<Entity> existed = getRepository().findById(newEntity.getId());
@@ -67,7 +95,7 @@ public abstract class CrudEndpoint<Entity extends CrudableEntity, Dao> {
         }
 
         try {
-
+            newEntity.setCreatedBy(context.getUsername());
             Entity savedEntity = getRepository().save(newEntity);
             Map<String, Object> response = Map.of(
                     "success", true,

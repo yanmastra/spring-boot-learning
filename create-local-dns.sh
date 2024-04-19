@@ -23,8 +23,11 @@ if [[ -z "$IP" ]]; then
     elif [[ ${os_type} == "ubuntu" ]]; then
         echo "OS TYPE: Linux"
         sudo ip address add 10.123.123.123 dev lo
+        echo "ip address add 10.123.123.123 dev lo"
     else
         echo -e "${RED}Can't detect OS type, neither Linux nor macOS!${ENDCOLOR}"
         exit -1
     fi
+else
+    echo "DNS already exists!\n$IP"
 fi

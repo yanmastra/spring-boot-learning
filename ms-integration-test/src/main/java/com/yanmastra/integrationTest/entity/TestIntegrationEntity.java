@@ -4,10 +4,14 @@ import com.yanmastra.msSecurityBase.crud.CrudableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 
 @Entity(name = "tb_test_integration")
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class TestIntegrationEntity extends CrudableEntity {
     @Id
     private String id;
@@ -20,6 +24,7 @@ public class TestIntegrationEntity extends CrudableEntity {
     public TestIntegrationEntity() {
     }
 
+    @Override
     public String getId() {
         return id;
     }
@@ -28,19 +33,11 @@ public class TestIntegrationEntity extends CrudableEntity {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
+    @Override
+    public String toString() {
+        return getClass().getName() + "{" +
+                "id="+id+", "+
+                "name="+name+", " +
+                "price="+price+"}";
     }
 }
