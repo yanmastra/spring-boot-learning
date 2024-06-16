@@ -23,7 +23,7 @@ public class CrudQueryFilterUtils {
         Set<String> whereClauses = otherQueries.entrySet().stream()
                 .filter(stringListEntry -> !Set.of("page", "size", "keyword").contains(stringListEntry.getKey()))
                 .map(entry -> {
-                    ParamToQuery query = ParamToQuery.factory(entry.getKey(), List.of(entry.getValue().split(",")), alias);
+                    ParamToQuery query = ParamToQuery.factory(entry.getKey(), entry.getValue(), alias);
                     log.info("query created:"+query);
                     return query;
                 })

@@ -24,37 +24,47 @@ abstract class ParamToQuery {
     abstract String getWhereClause();
     abstract void attachValue(Map<String, Object> hibernateQueryParams);
 
-    static ParamToQuery factory(String key, List<String> value, String alias) {
-        if (value == null || value.isEmpty()) return null;
+    static ParamToQuery factory(String key, String value, String alias) {
+        if (StringUtils.isBlank(value))
+            throw new IllegalArgumentException("Wrong values supplied to query param: "+key+", value:"+value);
 
-        log.info("creating query:"+key+", "+value.size()+", items:"+value);
+        List<String> values = List.of(value.split(","));
+        if (values.isEmpty()) return null;
+        if ((value.startsWith("range") || value.startsWith("in") || value.startsWith("notIn") ||
+                value.startsWith("greaterThan") || value.startsWith("lessThan") ||
+                value.startsWith("notEquals")) && values.size() == 1
+        ) {
+            throw new IllegalArgumentException("Wrong values supplied to query param: "+key+", value:"+value);
+        }
 
-        if (value.size() == 1) {
-            String first = value.getFirst();
+        log.info("creating query:"+key+", "+values.size()+", items:"+values);
+
+        if (values.size() == 1) {
+            String first = values.getFirst();
             if (StringUtils.isNotBlank(first) && first.contains(",")) {
-                value = Arrays.asList(first.split(","));
+                values = Arrays.asList(first.split(","));
             }
         }
 
-        if (value.size() == 1)
-            return new ParamToQueryEquals(key, value, alias);
-        if (value.size() >= 3) {
-            if ("range".equals(value.getFirst())) {
-                return new ParamToQueryRange(key, value, alias);
-            } else if ("in".equals(value.getFirst())) {
-                return new ParamToQueryIn(key, value, alias);
-            } else if ("notIn".equals(value.getFirst())) {
-                return new ParamToQueryNotIn(key, value, alias);
+        if (values.size() == 1)
+            return new ParamToQueryEquals(key, values, alias);
+        if (values.size() >= 3) {
+            if ("range".equals(values.getFirst())) {
+                return new ParamToQueryRange(key, values, alias);
+            } else if ("in".equals(values.getFirst())) {
+                return new ParamToQueryIn(key, values, alias);
+            } else if ("notIn".equals(values.getFirst())) {
+                return new ParamToQueryNotIn(key, values, alias);
             }
         } else {
-            if ("greaterThan".equals(value.getFirst())) {
-                return new ParamToQueryGreaterThan(key, value, alias);
-            } else if ("lessThan".equals(value.getFirst())) {
-                return new ParamToQueryLessThan(key, value, alias);
-            } else if ("notEquals".equals(value.getFirst())) {
-                return new ParamToQueryNotEquals(key, value, alias);
+            if ("greaterThan".equals(values.getFirst())) {
+                return new ParamToQueryGreaterThan(key, values, alias);
+            } else if ("lessThan".equals(values.getFirst())) {
+                return new ParamToQueryLessThan(key, values, alias);
+            } else if ("notEquals".equals(values.getFirst())) {
+                return new ParamToQueryNotEquals(key, values, alias);
             }
         }
-        throw new HttpException("Wrong value supplied to query param", HttpStatus.BAD_REQUEST);
+        throw new HttpException("Wrong values supplied to query param: "+key+", values:"+values, HttpStatus.BAD_REQUEST);
     }
 }

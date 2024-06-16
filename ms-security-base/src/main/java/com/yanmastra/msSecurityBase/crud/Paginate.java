@@ -1,5 +1,6 @@
 package com.yanmastra.msSecurityBase.crud;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.domain.Page;
@@ -9,11 +10,13 @@ import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Paginate<E> {
+    @JsonProperty("data")
     private List<E> data;
     @JsonProperty("current_page")
     private int currentPage;
+    @JsonProperty("size")
     private int size;
-    @JsonProperty("isFirst")
+    @JsonProperty("is_first")
     private boolean isFirst;
     @JsonProperty("is_last")
     private boolean isLast;
@@ -39,8 +42,8 @@ public class Paginate<E> {
     public static <E> Paginate<E> from(List<E> data, Pageable pageable, long total) {
         Paginate<E> paginate = new Paginate<>();
         paginate.setData(data);
-        paginate.setCurrentPage(pageable.getPageNumber());
-        paginate.setSize(pageable.getPageSize());
+        paginate.setCurrentPage(pageable.getPageNumber()+1);
+        paginate.setSize((int) Math.min(total, pageable.getPageSize()));
         paginate.setFirst(!pageable.hasPrevious());
         paginate.setTotalData(total);
         int totalPage = (int) (total / pageable.getPageSize());
@@ -52,6 +55,7 @@ public class Paginate<E> {
         return paginate;
     }
 
+    @JsonIgnore
     public List<E> getData() {
         return data;
     }
@@ -60,6 +64,7 @@ public class Paginate<E> {
         this.data = data;
     }
 
+    @JsonIgnore
     public int getCurrentPage() {
         return currentPage;
     }
@@ -68,6 +73,7 @@ public class Paginate<E> {
         this.currentPage = currentPage;
     }
 
+    @JsonIgnore
     public int getSize() {
         return size;
     }
@@ -76,6 +82,7 @@ public class Paginate<E> {
         this.size = size;
     }
 
+    @JsonIgnore
     public boolean isFirst() {
         return isFirst;
     }
@@ -84,6 +91,7 @@ public class Paginate<E> {
         isFirst = first;
     }
 
+    @JsonIgnore
     public boolean isLast() {
         return isLast;
     }
@@ -92,6 +100,7 @@ public class Paginate<E> {
         isLast = last;
     }
 
+    @JsonIgnore
     public long getTotalData() {
         return totalData;
     }
@@ -100,6 +109,7 @@ public class Paginate<E> {
         this.totalData = totalData;
     }
 
+    @JsonIgnore
     public int getTotalPage() {
         return totalPage;
     }
