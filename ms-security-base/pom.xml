@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.yanmastra</groupId>
 	<artifactId>spring-boot-ms-security-base</artifactId>
-	<version>1.2.0</version>
+	<version>2.0.0</version>
 	<name>Microservices Security Base</name>
 	<packaging>jar</packaging>
 
@@ -95,5 +95,6 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-config</artifactId>
         </dependency>
+
     </dependencies>
 </project>

@@ -16,6 +16,5 @@
 	<modules>
 		<module>spring-boot-ms-integration-test</module>
 		<module>ms-security-base</module>
-		<module>sb-pos</module>
 	</modules>
 </project>
