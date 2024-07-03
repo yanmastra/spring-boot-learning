@@ -20,9 +20,6 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
     private static final String RESOURCE_ACCESS = "resource_access";
     private static final String ROLES = "roles";
 
-    @Autowired
-    ObjectMapper objectMapper;
-
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
         List<SimpleGrantedAuthority> roles = extractAuthorities(jwt);

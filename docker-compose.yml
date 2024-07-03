@@ -25,22 +25,18 @@ services:
       - spring-boot-learning
 
   keycloak:
-    build:
-      dockerfile: ./docker/keycloak/Dockerfile
+    image: spring-boot-learning-keycloak:1.0.0
     container_name: 'sb-learning-keycloak'
     command:
       - start
       - --optimized
-#      - --db=postgres
       - --db-url=jdbc:postgresql://sb-learning-postgres:5432/${KEYCLOAK_DB_NAME}?serverTimezone=UTC
       - --db-username=${DATABASE_USERNAME}
       - --db-password=${DATABASE_PASSWORD}
       - --https-key-store-file=/opt/keycloak/conf/server.keystore
       - --https-key-store-password=${KEYCLOAK_KEYSTORE_PASSWORD}
       - --proxy-headers=forwarded
-      - --hostname-url=https://${KEYCLOAK_HOST}
-#      - --hostname-strict=false
-#      - --hostname-strict-https=false
+      - --hostname=https://${KEYCLOAK_HOST}
     ports:
       - "${KEYCLOAK_EXTERNAL_PORT}:8443"
     depends_on:
@@ -51,7 +47,7 @@ services:
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      JAVA_OPTS_KC_HEAP: "-XX:MaxHeapFreeRatio=30 -XX:MaxRAMPercentage=65"
+      JAVA_OPTS_KC_HEAP: "-XX:MaxHeapFreeRatio=40 -XX:MaxRAMPercentage=65"
     healthcheck:
       test:
         ["CMD", "curl", "-f", "https://localhost:8443/"]

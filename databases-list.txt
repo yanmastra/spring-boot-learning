@@ -2,3 +2,4 @@ db_authentication
 db_inventories
 db_orders
 db_microservices_test
+db_b2b_management_system

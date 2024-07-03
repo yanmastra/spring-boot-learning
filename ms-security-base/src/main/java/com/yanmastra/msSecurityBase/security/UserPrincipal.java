@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Transient
@@ -58,7 +59,8 @@ public class UserPrincipal extends JwtAuthenticationToken {
 
     @JsonProperty("company_access")
     public Set<String> getCompanyAccess() {
-        return new HashSet<>(getToken().getClaimAsStringList("company_access"));
+        List<String> companyAccess = getToken().getClaimAsStringList("company_access");
+        return companyAccess == null ? new HashSet<>() : new HashSet<>(companyAccess);
     }
 
     @JsonProperty("issuer")
