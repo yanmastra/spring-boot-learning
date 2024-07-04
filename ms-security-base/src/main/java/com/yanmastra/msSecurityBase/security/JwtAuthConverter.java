@@ -1,16 +1,23 @@
 package com.yanmastra.msSecurityBase.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yanmastra.msSecurityBase.Log;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.yanmastra.msSecurityBase.security.SecurityConstant.KEY_COMPANY_ACCESS;
+import static com.yanmastra.msSecurityBase.security.SecurityConstant.KEY_HEADER_COMPANY_ID;
 
 @Component
 public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationToken> {
@@ -20,10 +27,26 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
     private static final String RESOURCE_ACCESS = "resource_access";
     private static final String ROLES = "roles";
 
+    @Autowired
+    HttpServletRequest request;
+    @Autowired
+    HttpServletResponse response;
+    @Autowired
+    KeycloakAccessDeniedHandler accessDeniedHandler;
+
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
+        String companyId = request.getHeader(KEY_HEADER_COMPANY_ID);
+        if (StringUtils.isNotBlank(companyId) && !jwt.getClaimAsStringList(KEY_COMPANY_ACCESS).contains(companyId)) {
+            try {
+                accessDeniedHandler.handle(request, response, new AccessDeniedException("You do not have access to the company:" + companyId));
+            } catch (IOException ex) {
+                Log.log.error(ex.getMessage(), ex);
+            }
+        }
+
         List<SimpleGrantedAuthority> roles = extractAuthorities(jwt);
-        return new UserPrincipal(jwt, roles);
+        return new UserPrincipal(jwt, roles, companyId);
     }
 
     private List<SimpleGrantedAuthority> extractAuthorities(Jwt jwt) {

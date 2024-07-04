@@ -72,8 +72,15 @@ public class CrudQueryFilterUtils {
         if (requestParams.containsKey("keyword") && requestParams.get("keyword") != null)
             keyword = requestParams.remove("keyword");
 
-        sqlParams.put("companyIds", new ArrayList<>(principal.getCompanyAccess()));
-        String where = "where "+alias+"companyId in (:companyIds) and "+alias+"deletedAt is null";
+        String selectedCompany = principal.getSelectedCompanyId();
+        String where;
+        if (StringUtils.isNotBlank(selectedCompany)) {
+            sqlParams.put("companyId", principal.getSelectedCompanyId());
+            where = "where " + alias + "companyId = :companyId and " + alias + "deletedAt is null";
+        } else {
+            sqlParams.put("companyIds", principal.getCompanyAccess());
+            where = "where " + alias + "companyId in (:companyIds) and " + alias + "deletedAt is null";
+        }
 
         StringBuilder sbQuery = new StringBuilder(where);
         if (StringUtils.isNotBlank(keyword)) {

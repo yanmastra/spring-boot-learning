@@ -22,7 +22,7 @@ public class KeycloakAuthenticationEntryPoint implements AuthenticationEntryPoin
     ObjectMapper mapper;
 
     @Value("${logging.level.root:error}")
-    private String logLevel;
+    String logLevel;
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
