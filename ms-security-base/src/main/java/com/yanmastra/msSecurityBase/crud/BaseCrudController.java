@@ -1,6 +1,6 @@
 package com.yanmastra.msSecurityBase.crud;
 
-import com.mahotama.persistenBase.BaseEntity;
+import com.yanmastra.persistentBase.BaseEntity;
 import com.yanmastra.msSecurityBase.Log;
 import com.yanmastra.msSecurityBase.configuration.HttpException;
 import com.yanmastra.msSecurityBase.crud.utils.CrudQueryFilterUtils;

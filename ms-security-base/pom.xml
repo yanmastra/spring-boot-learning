@@ -29,8 +29,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.mahotama.persistenBase</groupId>
-			<artifactId>persisten-base</artifactId>
+			<groupId>com.yanmastra.persistenBase</groupId>
+			<artifactId>ms-persisten-base</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
 

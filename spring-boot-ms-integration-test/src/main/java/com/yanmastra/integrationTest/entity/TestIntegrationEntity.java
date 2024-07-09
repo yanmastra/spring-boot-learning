@@ -3,7 +3,7 @@ package com.yanmastra.integrationTest.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mahotama.persistenBase.BaseEntity;
+import com.yanmastra.persistentBase.BaseEntity;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
