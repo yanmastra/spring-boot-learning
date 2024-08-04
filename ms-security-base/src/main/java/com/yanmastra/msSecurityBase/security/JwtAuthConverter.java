@@ -4,7 +4,6 @@ import com.yanmastra.msSecurityBase.Log;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -27,12 +26,15 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
     private static final String RESOURCE_ACCESS = "resource_access";
     private static final String ROLES = "roles";
 
-    @Autowired
-    HttpServletRequest request;
-    @Autowired
-    HttpServletResponse response;
-    @Autowired
-    KeycloakAccessDeniedHandler accessDeniedHandler;
+    private final HttpServletRequest request;
+    private final HttpServletResponse response;
+    private final KeycloakAccessDeniedHandler accessDeniedHandler;
+
+    public JwtAuthConverter(HttpServletRequest request, HttpServletResponse response, KeycloakAccessDeniedHandler accessDeniedHandler) {
+        this.request = request;
+        this.response = response;
+        this.accessDeniedHandler = accessDeniedHandler;
+    }
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yanmastra.msSecurityBase.Log;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,8 +17,10 @@ import java.util.stream.Stream;
 @Component
 public class KeycloakAccessDeniedHandler implements AccessDeniedHandler {
 
-    @Autowired
-    ObjectMapper mapper;
+    private final ObjectMapper mapper;
+    public KeycloakAccessDeniedHandler(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException authException) throws IOException {

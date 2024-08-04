@@ -9,12 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthorizationException;
 import org.springframework.security.oauth2.jwt.JwtValidationException;
-import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -22,14 +23,11 @@ import java.util.Map;
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({
-            HttpException.class,
-            AuthenticationException.class,
-            IllegalArgumentException.class,
+            RuntimeException.class,
             ChangeSetPersister.NotFoundException.class,
-            InvalidBearerTokenException.class,
-            JwtValidationException.class
+            IOException.class,
     })
-    public final ResponseEntity<Object> handleConflict(RuntimeException ex, WebRequest request) throws Exception {
+    public final ResponseEntity<Object> handleConflict(Exception ex, WebRequest request) throws Exception {
         Log.log.error(request.getContextPath()+":"+ex.getMessage(), ex);
 
         HttpStatusCode statusCode = getHttpStatusCode(ex);
@@ -43,23 +41,24 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         Iterator<String> headerNames = request.getHeaderNames();
         while (headerNames.hasNext()) {
             String key=headerNames.next();
-            headers.add(key, headers.getFirst(key));
+            if (key.toLowerCase().contains("cookie") ||
+            key.toLowerCase().contains("token")) {
+                headers.add(key, request.getHeader(key));
+            }
         }
-
         return handleExceptionInternal(ex, newBody,  headers, statusCode, request);
     }
 
-    private static HttpStatusCode getHttpStatusCode(RuntimeException ex) {
-        HttpStatusCode statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-        switch (ex) {
-            case IllegalArgumentException illegalArgumentException -> statusCode = HttpStatus.BAD_REQUEST;
-            case AuthenticationException authenticationException -> statusCode = HttpStatus.UNAUTHORIZED;
-            case JwtValidationException jwtValidationException -> statusCode = HttpStatus.UNAUTHORIZED;
-            case OAuth2AuthorizationException oAuth2AuthorizationException -> statusCode = HttpStatus.FORBIDDEN;
-            case HttpException httpException -> statusCode = HttpStatus.valueOf(httpException.getStatus());
-            default -> {}
-        }
-        return statusCode;
+    private static HttpStatusCode getHttpStatusCode(Exception ex) {
+        return switch (ex) {
+            case IllegalArgumentException illegalArgumentException -> HttpStatus.BAD_REQUEST;
+            case AuthenticationException authenticationException -> HttpStatus.UNAUTHORIZED;
+            case JwtValidationException jwtValidationException -> HttpStatus.UNAUTHORIZED;
+            case OAuth2AuthorizationException oAuth2AuthorizationException -> HttpStatus.FORBIDDEN;
+            case RestClientResponseException restClientResponseException -> restClientResponseException.getStatusCode();
+            case HttpException httpException -> httpException.getStatus() == null ? HttpStatus.INTERNAL_SERVER_ERROR : httpException.getStatus();
+            default -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
     }
 
 

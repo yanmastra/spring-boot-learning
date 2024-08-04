@@ -4,7 +4,6 @@ package com.yanmastra.msSecurityBase.security;
 import com.yanmastra.msSecurityBase.Log;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,28 +21,22 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    private static final String GROUPS = "groups";
-    private static final String REALM_ACCESS_CLAIM = "realm_access";
-    private static final String ROLES_CLAIM = "roles";
 
-    public SecurityConfig() {}
+    public SecurityConfig(KeycloakAccessDeniedHandler keycloakAccessDeniedHandler, KeycloakAuthenticationEntryPoint authEntryPoint, KeycloakAuthenticationFailureHandler keycloakAuthenticationFailureHandler, JwtAuthConverter jwtAuthConverter, AuthorizeCustomizer authorizeCustomizer, KeycloakLogoutHandler keycloakLogoutHandler) {
+        this.keycloakAccessDeniedHandler = keycloakAccessDeniedHandler;
+        this.authEntryPoint = authEntryPoint;
+        this.keycloakAuthenticationFailureHandler = keycloakAuthenticationFailureHandler;
+        this.jwtAuthConverter = jwtAuthConverter;
+        this.authorizeCustomizer = authorizeCustomizer;
+        this.keycloakLogoutHandler = keycloakLogoutHandler;
+    }
 
-
-    @Autowired
-    KeycloakAccessDeniedHandler keycloakAccessDeniedHandler;
-    @Autowired
-    KeycloakAuthenticationEntryPoint authEntryPoint;
-
-    @Autowired
-    KeycloakAuthenticationFailureHandler keycloakAuthenticationFailureHandler;
-
-    @Autowired
-    JwtAuthConverter jwtAuthConverter;
-
-    @Autowired
-    AuthorizeCustomizer authorizeCustomizer;
-    @Autowired
-    KeycloakLogoutHandler keycloakLogoutHandler;
+    private final KeycloakAccessDeniedHandler keycloakAccessDeniedHandler;
+    private final KeycloakAuthenticationEntryPoint authEntryPoint;
+    private final KeycloakAuthenticationFailureHandler keycloakAuthenticationFailureHandler;
+    private final JwtAuthConverter jwtAuthConverter;
+    private final AuthorizeCustomizer authorizeCustomizer;
+    private final KeycloakLogoutHandler keycloakLogoutHandler;
 
     @Bean
     public SessionRegistry sessionRegistry() {

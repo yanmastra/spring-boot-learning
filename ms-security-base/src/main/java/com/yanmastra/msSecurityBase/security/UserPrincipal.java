@@ -3,13 +3,13 @@ package com.yanmastra.msSecurityBase.security;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.yanmastra.msSecurityBase.utils.DateTimeUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.Transient;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -80,7 +80,7 @@ public class UserPrincipal extends JwtAuthenticationToken {
     }
 
     @JsonProperty(KEY_ISSUER_AT)
-    public LocalDateTime getIssuedAt() {
-        return DateTimeUtils.toDateTime(getToken().getIssuedAt()+"");
+    public ZonedDateTime getIssuedAt() {
+        return getToken().getIssuedAt() == null ? null : ZonedDateTime.ofInstant(getToken().getIssuedAt(), ZoneId.systemDefault());
     }
 }

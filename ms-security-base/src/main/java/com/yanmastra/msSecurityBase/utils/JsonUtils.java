@@ -1,23 +1,26 @@
 package com.yanmastra.msSecurityBase.utils;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.yanmastra.msSecurityBase.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.List;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 public class JsonUtils {
     private JsonUtils() {
     }
 
     private static ObjectMapper objectMapper;
-    private static Logger logger = LogManager.getLogger(JsonUtils.class);
+    private static final Logger logger = LogManager.getLogger(JsonUtils.class);
+    private static final DateFormat DEFAULT_ZONED_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
     public static ObjectMapper getObjectMapper() {
         if (objectMapper == null) {
@@ -28,8 +31,10 @@ public class JsonUtils {
     }
 
     public static void setObjectMapper(ObjectMapper objectMapper) {
-        JsonUtils.objectMapper = objectMapper;
-//        configure(JsonUtils.objectMapper);
+        if (JsonUtils.objectMapper != null && !(JsonUtils.objectMapper.equals(objectMapper))) {
+            JsonUtils.objectMapper = objectMapper;
+            configure(JsonUtils.objectMapper);
+        }
     }
 
     private static void configure(ObjectMapper objectMapper) {
@@ -39,9 +44,8 @@ public class JsonUtils {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
 
-//        SimpleModule module = new SimpleModule();
-//        module.addDeserializer(UserPrincipal.class, new UserPrincipalDeserializer());
-//        objectMapper.registerModule(module);
+        objectMapper.setDateFormat(DEFAULT_ZONED_DATE_FORMAT);
+        objectMapper.registerModule(new JavaTimeModule());
     }
 
     public static String toJson(Object object, boolean throwException) {
@@ -92,73 +96,13 @@ public class JsonUtils {
         return fromJson(json, typeReference, false);
     }
 
-//    private static class UserPrincipalDeserializer extends StdDeserializer<UserPrincipal> {
-//        protected UserPrincipalDeserializer(Class<UserPrincipal> vc) {
-//            super(vc);
-//        }
-//
-//        protected UserPrincipalDeserializer() {
-//            super((Class<UserPrincipal>) null);
-//        }
-//
-//        @Override
-//        public UserPrincipal deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
-//            try {
-//                JsonNode jn = jsonParser.getCodec().readTree(jsonParser);
-//                UserPrincipalJson principalJson = jsonParser.getCodec().treeToValue(jn, UserPrincipalJson.class);
-//                return new UserPrincipal(principalJson.getUser(), principalJson.getAllowedRoles(), principalJson.getAppCode(), principalJson.getAccessToken());
-//            } catch (IOException e){
-//                logger.error(e.getMessage(), e);
-//                throw e;
-//            }
-//        }
-//    }
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private static class UserPrincipalJson {
-//        @JsonProperty("user")
-//        private UserOnly user;
-        @JsonProperty("allowed_roles")
-        private List<String> allowedRoles;
-
-        @JsonProperty("app_code")
-        private String appCode;
-        @JsonProperty("access_token")
-        private String accessToken;
-
-        public UserPrincipalJson() {
+    public static boolean isJson(String s) {
+        try {
+            objectMapper.readTree(s);
+        } catch (JacksonException je) {
+            Log.log.warn(je.getMessage());
+            return false;
         }
-
-//        public UserOnly getUser() {
-//            return user;
-//        }
-
-//        public void setUser(UserOnly user) {
-//            this.user = user;
-//        }
-
-        public List<String> getAllowedRoles() {
-            return allowedRoles;
-        }
-
-        public void setAllowedRoles(List<String> allowedRoles) {
-            this.allowedRoles = allowedRoles;
-        }
-
-        public String getAppCode() {
-            return appCode;
-        }
-
-        public void setAppCode(String appCode) {
-            this.appCode = appCode;
-        }
-
-        public String getAccessToken() {
-            return accessToken;
-        }
-
-        public void setAccessToken(String accessToken) {
-            this.accessToken = accessToken;
-        }
+        return true;
     }
 }

@@ -1,17 +1,15 @@
 package com.yanmastra.msSecurityBase.crud;
 
-import com.yanmastra.persistentBase.BaseEntity;
 import com.yanmastra.msSecurityBase.Log;
 import com.yanmastra.msSecurityBase.configuration.HttpException;
 import com.yanmastra.msSecurityBase.crud.utils.CrudQueryFilterUtils;
 import com.yanmastra.msSecurityBase.security.UserPrincipal;
+import com.yanmastra.persistentBase.BaseEntity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -30,7 +28,6 @@ public abstract class BaseCrudController<Entity extends BaseEntity, Dao> {
     protected abstract Entity toEntity(Dao dao);
     protected abstract Entity update(Entity entity, Dao dao);
     protected abstract Class<Entity> getEntityClass();
-    private static final Logger logger = LoggerFactory.getLogger(BaseCrudController.class);
 
     @Autowired
     public EntityManager entityManager;
@@ -47,7 +44,7 @@ public abstract class BaseCrudController<Entity extends BaseEntity, Dao> {
             @RequestParam(required = false) Map<String, String> allParams,
             UserPrincipal principal
     ) {
-        logger.debug("page:"+page+", size:"+size);
+        Log.log.debug("GET: page:"+page+", size:"+size);
 
         if (page <= 0) page = 1;
         if (size <= 0) size = 1;
@@ -81,7 +78,7 @@ public abstract class BaseCrudController<Entity extends BaseEntity, Dao> {
     public Dao getOne(
             @PathVariable("id") String id
     ) {
-        logger.info("GET id:"+id);
+        Log.log.debug("GET id:"+id);
         Optional<Entity> entityOptional = getRepository().findById(id);
         if (entityOptional.isPresent()) {
             return this.fromEntity(entityOptional.get());
@@ -94,11 +91,12 @@ public abstract class BaseCrudController<Entity extends BaseEntity, Dao> {
     @Transactional
     public ResponseEntity<Map<String, Object>> create(
             @RequestBody Dao dao,
-            @RequestHeader(value = "X-Company-Id") String companyId,
             UserPrincipal context
     ) {
-        if (!context.getCompanyAccess().contains(companyId)) {
-            throw new HttpException("Incompatible companyId!", HttpStatus.BAD_REQUEST);
+        Log.log.debug("POST: "+dao.toString());
+        if (StringUtils.isBlank(context.getSelectedCompanyId()) || !context.getCompanyAccess().contains(context.getSelectedCompanyId())) {
+            Log.log.error("Invalid company access!");
+            throw new HttpException("Incompatible companyId!, X-Company-Id:"+context.getSelectedCompanyId(), HttpStatus.BAD_REQUEST);
         }
 
         Entity newEntity = toEntity(dao);
@@ -113,7 +111,7 @@ public abstract class BaseCrudController<Entity extends BaseEntity, Dao> {
         }
 
         try {
-            newEntity.setCompanyId(companyId);
+            newEntity.setCompanyId(context.getSelectedCompanyId());
             newEntity.setCreatedBy(context.getUsername());
             Entity savedEntity = getRepository().save(newEntity);
             Map<String, Object> response = Map.of(
@@ -123,7 +121,7 @@ public abstract class BaseCrudController<Entity extends BaseEntity, Dao> {
             );
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            Log.log.error(e.getMessage(), e);
             throw new RestClientException("Failed to save "+(dao == null ? "Unknown" : dao.getClass().getName())+" object due to error:" + e.getMessage(), e);
         }
     }
@@ -133,9 +131,14 @@ public abstract class BaseCrudController<Entity extends BaseEntity, Dao> {
     public ResponseEntity<Map<String, Object>> update(
             @PathVariable("id") String id,
             @RequestBody Dao dao,
-            @RequestHeader(value = "X-Company-Id") String companyId,
             UserPrincipal context
     ) {
+        Log.log.debug("PUT: "+dao.toString());
+        if (StringUtils.isBlank(context.getSelectedCompanyId()) || !context.getCompanyAccess().contains(context.getSelectedCompanyId())) {
+            Log.log.error("Invalid company access!");
+            throw new HttpException("Incompatible companyId!, X-Company-Id:"+context.getSelectedCompanyId(), HttpStatus.BAD_REQUEST);
+        }
+
         try {
             Entity entity = toEntity(dao);
             entity.setId(id);
@@ -148,7 +151,7 @@ public abstract class BaseCrudController<Entity extends BaseEntity, Dao> {
                 entity = update(obj, dao);
             } else {
                 entity = update(entity, dao);
-                entity.setCompanyId(companyId);
+                entity.setCompanyId(context.getSelectedCompanyId());
             }
 
             entity.setUpdatedBy(context.getUsername());
@@ -161,8 +164,8 @@ public abstract class BaseCrudController<Entity extends BaseEntity, Dao> {
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw new RestClientException("Failed to save "+(dao == null ? "Unknown" : dao.getClass().getName())+" object due to error:" + e.getMessage(), e);
+            Log.log.error(e.getMessage(), e);
+            throw new RestClientException("Failed to save "+ dao.getClass().getName() +" object due to error:" + e.getMessage(), e);
         }
     }
 
@@ -170,15 +173,21 @@ public abstract class BaseCrudController<Entity extends BaseEntity, Dao> {
     @Transactional
     public ResponseEntity<Map<String, Object>> delete(
             @PathVariable("id") String id,
-            UserPrincipal principal
+            UserPrincipal context
     ) {
+        Log.log.debug("DELETE: "+id);
+        if (StringUtils.isBlank(context.getSelectedCompanyId()) || !context.getCompanyAccess().contains(context.getSelectedCompanyId())) {
+            Log.log.error("Invalid company access!");
+            throw new HttpException("Incompatible companyId!, X-Company-Id:"+context.getSelectedCompanyId(), HttpStatus.BAD_REQUEST);
+        }
+
         Optional<Entity> existed = getRepository().findById(id);
         if (existed.isPresent()) {
             Entity obj = existed.get();
-            if (!principal.getCompanyAccess().contains(obj.getCompanyId()))
+            if (!context.getCompanyAccess().contains(obj.getCompanyId()))
                 throw new HttpException("You are not allowed to delete this entity!", HttpStatus.FORBIDDEN);
 
-            obj.setDeletedBy(principal.getUserName());
+            obj.setDeletedBy(context.getUserName());
             getRepository().delete(obj);
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -187,7 +196,7 @@ public abstract class BaseCrudController<Entity extends BaseEntity, Dao> {
         } else {
             return ResponseEntity.status(404).body(Map.of(
                     "success", false,
-                    "message", "Entity not found!"
+                    "message", "No "+getEntityClass().getName()+" entity found with id:"+id
             ));
         }
     }
