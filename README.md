@@ -1,6 +1,6 @@
 # Practicing to build Microservices with Spring-boot, Keycloak, and SSL integrated
-This project was created to practice building Microservices with Spring-boot, Securing services with Keycloak and testing the performance of hibernate-orm and hibernate-reactive.
-In this project, there is a sample of the Rest-API project that contains many samples of Endpoint classes and samples of hibernate queries, etc.
+This project was created to practice building Microservices with Spring-boot, Securing services with Keycloak and testing the performance of Spring JPA and hibernate query.
+In this project, there is a sample of the Rest-API project that contains a sample of Endpoint classes and a boilerplate class to make us easier to create CRUD Endpoint 
 If you are interested, let's see a couple of documentation below.
 
 
