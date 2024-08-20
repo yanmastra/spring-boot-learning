@@ -2,6 +2,7 @@ package com.yanmastra.msSecurityBase.security;
 
 
 import com.yanmastra.msSecurityBase.Log;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+
+import java.util.stream.Stream;
 
 @Configuration
 @EnableWebSecurity
@@ -59,7 +62,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeCustomizer)
                 .addFilterBefore((servletRequest, servletResponse, filterChain) -> {
                     if (servletRequest instanceof HttpServletRequest httpServletRequest) {
-                        Log.log.info(httpServletRequest.getMethod() + " --> " + httpServletRequest.getRequestURI()+", Auth:"+(StringUtils.isNotBlank(httpServletRequest.getHeader("Authorization"))));
+                        Log.log.info(httpServletRequest.getMethod() + "\t --> " + httpServletRequest.getRequestURI()+", Auth:"+(StringUtils.isNotBlank(httpServletRequest.getHeader("Authorization"))));
+
+                        Cookie[] cookies = httpServletRequest.getCookies();
+                        if (cookies != null) {
+                            Log.log.debug("\t --> " + String.join(",", Stream.of(cookies).map(c -> "Cookie: " + c.getName() + "=" + c.getValue() + "; path=" + c.getPath() + "; exp=" + c.getMaxAge())
+                                    .toList()));
+                        }
                     }
                     filterChain.doFilter(servletRequest, servletResponse);
                 }, BearerTokenAuthenticationFilter.class)
