@@ -6,7 +6,10 @@ if [[ -z "$KC_PATH" ]]; then
 fi
 
 if [[ -f "${KC_PATH}/bin/kc.sh" ]]; then
+  echo "WORKDIR ${KC_PATH}"
   echo "${KC_PATH}/bin/kc.sh build --features=\"docker,token-exchange\""
+
+  WORKDIR "${KC_PATH}"
   ${KC_PATH}/bin/kc.sh build --features="docker,token-exchange"
 else
   echo "${KC_PATH} is not a valid keycloak installation! Please visit https://www.keycloak.org/getting-started/getting-started-zip"

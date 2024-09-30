@@ -5,6 +5,8 @@ http {
         server 10.123.123.123:${KEYCLOAK_EXTERNAL_PORT};
     }
 
+    include /etc/nginx/include/*;
+
     server {
         listen 80;
         return 301 https://$host$request_uri;

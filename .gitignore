@@ -15,6 +15,7 @@
 nginx/certs/**.crt
 nginx/certs/**.key
 nginx/nginx.conf
+nginx/conf/**.conf
 docker/keycloak/Dockerfile
 docker/keycloak/**.keystore
 sb-b2b-management-system
